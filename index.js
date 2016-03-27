@@ -40,6 +40,7 @@ function list(logs, nextToken) {
 }
 
 function getStreamEvents(logs, logGroup, logStream) {
+  console.log('    call getLogEventsAsync() : ' + logStream)
   return logs.getLogEventsAsync({
     logGroupName: logGroup,
     logStreamName: logStream
@@ -53,6 +54,7 @@ function getStreamEvents(logs, logGroup, logStream) {
  * Tail specified log group
  */
 function tail(logs, logGroup, numRecords, showTimes, showStreams, seenStreamTimestamps) {
+  console.log('########### start ###########')
   return logs.describeLogStreamsAsync({
     logGroupName: logGroup,
     descending: true,
@@ -63,8 +65,14 @@ function tail(logs, logGroup, numRecords, showTimes, showStreams, seenStreamTime
     if (result && result.logStreams) {
       var latestStreams = [];
       result.logStreams.map(function (logStream) {
-        if (logStream.lastEventTimestamp) {
+        console.log('---- ' + logStream.logStreamName + ': ' + logStream.lastEventTimestamp)
+        if (logStream.lastEventTimestamp &&
+            (!seenStreamTimestamps.hasOwnProperty(logStream.logStreamName) ||
+            logStream.lastEventTimestamp > seenStreamTimestamps[logStream.logStreamName])) {
+          console.log('+++ ' + logStream.logStreamName)
           latestStreams.push(logStream.logStreamName);
+        } else {
+          console.log('    skip ' + logStream.logStreamName)
         }
       });
     }
@@ -135,6 +143,7 @@ function tail(logs, logGroup, numRecords, showTimes, showStreams, seenStreamTime
         seenStreamTimestamps[key] = newTimestamps[key];
       }
     });
+    console.log('----------- seenStreamTimestamps : ' + JSON.stringify(seenStreamTimestamps, null, 2))
   });
 }
 
